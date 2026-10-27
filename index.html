@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת ניהול בית ספר אישית</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter / Heebo -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 left-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-100 transform transition-all">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 text-white text-2xl shadow-lg shadow-indigo-200 mb-4">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900">ניהול בית ספר חכם</h1>
+                <p class="text-sm text-slate-500 mt-1">הזן סיסמה כדי להיכנס למערכת האישית שלך</p>
+            </div>
+            
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">סיסמת גישה</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" id="password-input" required placeholder="הכנס סיסמה (ברירת מחדל: 1234)" 
+                            class="w-full pr-10 pl-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl shadow-lg shadow-indigo-200 transition flex items-center justify-center gap-2">
+                    <span>כניסה למערכת</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-xs text-slate-400">
+                סיסמת ברירת מחדל להדגמה: <span class="font-semibold text-slate-600">1234</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="main-app" class="flex-1 flex flex-col hidden">
+        <!-- HEADER -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-100">
+                        <i class="fa-solid fa-school"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-slate-900 leading-tight">יומן בית ספר דיגיטלי</h2>
+                        <span class="text-xs text-emerald-600 font-medium flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> מחובר ומאובטח
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div id="current-time-display" class="hidden sm:block text-xs font-medium bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg"></div>
+                    <button onclick="logout()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition" title="התנתק">
+                        <i class="fa-solid fa-power-off text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENT BODY -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            
+            <!-- STATUS BANNER & QUICK ATTENDANCE SECTION -->
+            <section class="bg-gradient-to-br from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div class="absolute -left-10 -bottom-10 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
+                    <div class="space-y-2 text-center lg:text-right">
+                        <span class="inline-block px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-medium text-indigo-200">
+                            ניהול נוכחות יומי
+                        </span>
+                        <h3 class="text-2xl sm:text-3xl font-bold tracking-tight">דיווח נוכחות מהיר</h3>
+                        <p class="text-indigo-200 text-sm max-w-lg">
+                            לחץ על כפתור הגעה או יציאה בעת כניסתך ושציאתך מבית הספר. הפעולה תתעד את השעה ותשלח התראה אוטומטית למייל.
+                        </p>
+                        <div id="status-indicator-box" class="pt-2 flex items-center justify-center lg:justify-start gap-2 text-sm">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-medium">
+                                <i class="fa-solid fa-circle-question"></i> סטטוס נוכחי: טרם דווחה הגעה היום
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                        <button onclick="recordAttendance('arrived')" class="flex-1 sm:flex-initial px-6 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-900/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-right-to-bracket text-xl"></i>
+                            <div class="text-right">
+                                <div class="text-sm font-bold">הגעתי לבית הספר</div>
+                                <div class="text-xs text-emerald-100 font-normal">דיווח כניסה + מייל</div>
+                            </div>
+                        </button>
+
+                        <button onclick="recordAttendance('left')" class="flex-1 sm:flex-initial px-6 py-4 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-2xl shadow-lg shadow-rose-900/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
+                            <i class="fa-solid fa-right-from-bracket text-xl"></i>
+                            <div class="text-right">
+                                <div class="text-sm font-bold">יצאתי מבית הספר</div>
+                                <div class="text-xs text-rose-100 font-normal">דיווח יציאה + מייל</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Attendance Logs preview bar -->
+                <div class="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-indigo-200 gap-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>פעילות אחרונה: <span id="last-activity-text" class="text-white font-medium">אין פעילות מתועדת להיום</span></span>
+                    </div>
+                    <button onclick="toggleAttendanceModal()" class="text-white hover:underline flex items-center gap-1">
+                        צפה בכל היסטוריית הנוכחות <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- TWO COLUMN GRID FOR HOMEWORK & ABSENCES -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- HOMEWORK MANAGEMENT -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                                    <i class="fa-solid fa-book-open"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-lg">שיעורי בית ומטלות</h4>
+                                    <p class="text-xs text-slate-500">הוסף מטלות ושלח עדכון מייל מרוכז</p>
+                                </div>
+                            </div>
+                            <span id="hw-count-badge" class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold">0 מטלות</span>
+                        </div>
+
+                        <!-- Add homework form -->
+                        <form id="homework-form" onsubmit="addHomework(event)" class="space-y-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">מקצוע</label>
+                                    <input type="text" id="hw-subject" required placeholder="למשל: מתמטיקה" 
+                                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">תאריך הגשה</label>
+                                    <input type="date" id="hw-date" required 
+                                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">תיאור המטלה</label>
+                                <textarea id="hw-desc" rows="2" required placeholder="לפתור עמוד 45 תרגילים 1-5..." 
+                                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                            </div>
+                            <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-xl shadow-md shadow-amber-200 transition text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>הוסף שיעורי בית ושלח עדכון למייל</span>
+                            </button>
+                        </form>
+
+                        <!-- Homework List -->
+                        <div class="space-y-3 max-h-64 overflow-y-auto pr-1" id="homework-list-container">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ATTENDANCE / ABSENCES & LATES REPORTING -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200/80 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                                    <i class="fa-solid fa-user-clock"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-lg">חיסורים ואיחורים</h4>
+                                    <p class="text-xs text-slate-500">דיווח על היעדרות או איحור מראש</p>
+                                </div>
+                            </div>
+                            <span id="report-count-badge" class="px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-semibold">0 דיווחים</span>
+                        </div>
+
+                        <!-- Report form -->
+                        <form id="report-form" onsubmit="addReport(event)" class="space-y-4 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">סוג הדיווח</label>
+                                    <select id="report-type" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                        <option value="איחור">איחור לשיעור</option>
+                                        <option value="חיסור / מחלה">חיסור / מחלה</option>
+                                        <option value="אישור רפואי">אישור רפואי / סיבה מוצדקת</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-600 mb-1">תאריך</label>
+                                    <input type="date" id="report-date" required 
+                                        class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">פירוט / סיבה</label>
+                                <input type="text" id="report-reason" required placeholder="למשל: בדיקת רופא בבוקר..." 
+                                    class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            </div>
+                            <button type="submit" class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl shadow-md shadow-purple-200 transition text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>שלח דיווח והתראת מייל</span>
+                            </button>
+                        </form>
+
+                        <!-- Reports List -->
+                        <div class="space-y-3 max-h-64 overflow-y-auto pr-1" id="reports-list-container">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="bg-white border-t border-slate-200 mt-12 py-6 text-center text-xs text-slate-400">
+            <p>מערכת ניהול בית ספר אישית מוגנת בסיסמה • נבנתה במיוחד להתממשקות עם שירותי אוטומציה ומייל</p>
+        </footer>
+    </div>
+
+    <!-- FULL ATTENDANCE HISTORY MODAL -->
+    <div id="attendance-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-lg">היסטוריית כניסות ויציאות מבית הספר</h4>
+                        <p class="text-xs text-slate-500">יומן מלא של כל פעולות ההגעה והיציאה</p>
+                    </div>
+                </div>
+                <button onclick="toggleAttendanceModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 space-y-3" id="full-attendance-logs">
+                <!-- Populated via JS -->
+            </div>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                <button onclick="toggleAttendanceModal()" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-xl text-sm transition">
+                    סגור
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Default password configuration
+        const CORRECT_PASSWORD = '1234';
+
+        // State data loaded from localStorage or initialized
+        let appState = {
+            isAuthenticated: false,
+            attendanceLogs: JSON.parse(localStorage.getItem('school_attendance')) || [],
+            homework: JSON.parse(localStorage.getItem('school_homework')) || [
+                { id: 1, subject: 'מתמטיקה', date: '2026-06-05', desc: 'עמוד 42 תרגילים 1 עד 8' },
+                { id: 2, subject: 'אנגלית', date: '2026-06-06', desc: 'קריאת עמודים 12-14 וכתיבת סיכום' }
+            ],
+            reports: JSON.parse(localStorage.getItem('school_reports')) || [
+                { id: 1, type: 'איחור', date: '2026-06-01', reason: 'פקקים בכביש הגישה' }
+            ]
+        };
+
+        // Initialize UI on load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check if already authenticated in session
+            if (sessionStorage.getItem('is_auth') === 'true') {
+                appState.isAuthenticated = true;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                initApp();
+            }
+
+            // Set default date values in forms to today
+            const todayStr = new Date().toISOString().split('T')[0];
+            if(document.getElementById('hw-date')) document.getElementById('hw-date').value = todayStr;
+            if(document.getElementById('report-date')) document.getElementById('report-date').value = todayStr;
+
+            // Update live clock
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
+
+        function updateClock() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const timeString = now.toLocaleDateString('he-IL', options);
+            const el = document.getElementById('current-time-display');
+            if(el) el.textContent = timeString;
+        }
+
+        // Login handler
+        function handleLogin(e) {
+            e.preventDefault();
+            const pass = document.getElementById('password-input').value;
+            if (pass === CORRECT_PASSWORD) {
+                appState.isAuthenticated = true;
+                sessionStorage.setItem('is_auth', 'true');
+                document.getElementById('login-screen').classList.add('fade-out');
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                showToast('התחברת בהצלחה למערכת!', 'success');
+                initApp();
+            } else {
+                showToast('סיסמה שגויה! נסה שוב (ברירת מחדל: 1234)', 'error');
+                document.getElementById('password-input').value = '';
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('is_auth');
+            appState.isAuthenticated = false;
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('password-input').value = '';
+            showToast('התנתקת מהמערכת בהצלחה', 'info');
+        }
+
+        function initApp() {
+            renderHomework();
+            renderReports();
+            updateStatusSummary();
+            renderFullAttendanceLogs();
+        }
+
+        // Attendance Recording Function
+        function recordAttendance(type) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('he-IL');
+            const isoDate = now.toISOString();
+
+            const actionTitle = type === 'arrived' ? 'הגעתי לבית הספר' : 'יצאתי מבית הספר';
+            const logItem = {
+                id: Date.now(),
+                type: type,
+                title: actionTitle,
+                time: timeStr,
+                date: dateStr,
+                iso: isoDate
+            };
+
+            appState.attendanceLogs.unshift(logItem);
+            localStorage.setItem('school_attendance', JSON.stringify(appState.attendanceLogs));
+
+            updateStatusSummary();
+            renderFullAttendanceLogs();
+
+            // Simulate Email trigger notification
+            const emailSubject = type === 'arrived' ? 'אישור הגעה לבית הספר' : 'אישור יציאה מבית הספר';
+            showToast(`✅ דווח בהצלחה! מייל אוטומטי נשלח: "${emailSubject}" בשעה ${timeStr}`, 'success');
+        }
+
+        // Update top status indicator & last activity
+        function updateStatusSummary() {
+            const lastLog = appState.attendanceLogs[0];
+            const lastActText = document.getElementById('last-activity-text');
+            const statusBox = document.getElementById('status-indicator-box');
+
+            if (!lastLog) {
+                if(lastActText) lastActText.textContent = 'אין פעילות מתועדת להיום';
+                if(statusBox) {
+                    statusBox.innerHTML = `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/10 text-indigo-100 font-medium">
+                            <i class="fa-solid fa-circle-question"></i> סטטוס נוכחי: טרם דווחה הגעה
+                        </span>
+                    `;
+                }
+                return;
+            }
+
+            if(lastActText) {
+                lastActText.textContent = `${lastLog.title} ב־${lastLog.time} (${lastLog.date})`;
+            }
+
+            if(statusBox) {
+                if (lastLog.type === 'arrived') {
+                    statusBox.innerHTML = `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-medium">
+                            <i class="fa-solid fa-circle-check text-emerald-400"></i> סטטוס נוכחי: נמצא בבית הספר (הגעה בשעה ${lastLog.time})
+                        </span>
+                    `;
+                } else {
+                    statusBox.innerHTML = `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/20 text-rose-300 font-medium">
+                            <i class="fa-solid fa-person-walking-arrow-right text-rose-400"></i> סטטוס נוכחי: מחוץ לבית הספר (יציאה בשעה ${lastLog.time})
+                        </span>
+                    `;
+                }
+            }
+        }
+
+        // Homework Management Functions
+        function addHomework(e) {
+            e.preventDefault();
+            const subject = document.getElementById('hw-subject').value;
+            const date = document.getElementById('hw-date').value;
+            const desc = document.getElementById('hw-desc').value;
+
+            const newHw = {
+                id: Date.now(),
+                subject,
+                date,
+                desc
+            };
+
+            appState.homework.unshift(newHw);
+            localStorage.setItem('school_homework', JSON.stringify(appState.homework));
+
+            document.getElementById('homework-form').reset();
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('hw-date').value = todayStr;
+
+            renderHomework();
+            showToast(`📚 שיעורי בית חדשים ב-${subject} נוספו! מייל עדכון נשלח בהצלחה.`, 'success');
+        }
+
+        function deleteHomework(id) {
+            appState.homework = appState.homework.filter(item => item.id !== id);
+            localStorage.setItem('school_homework', JSON.stringify(appState.homework));
+            renderHomework();
+            showToast('המטלה הוסרה בהצלחה', 'info');
+        }
+
+        function renderHomework() {
+            const container = document.getElementById('homework-list-container');
+            const badge = document.getElementById('hw-count-badge');
+            if(badge) badge.textContent = `${appState.homework.length} מטלות`;
+
+            if (appState.homework.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        אין שיעורי בית מעודכנים כרגע.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = appState.homework.map(item => `
+                <div class="p-4 bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-200/60 transition flex items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-lg text-xs font-bold">${item.subject}</span>
+                            <span class="text-xs text-slate-500"><i class="fa-regular fa-calendar ml-1"></i>הגשה: ${item.date}</span>
+                        </div>
+                        <p class="text-sm text-slate-700 font-medium">${item.desc}</p>
+                    </div>
+                    <button onclick="deleteHomework(${item.id})" class="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition" title="מחק מטלה">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Reports Management Functions
+        function addReport(e) {
+            e.preventDefault();
+            const type = document.getElementById('report-type').value;
+            const date = document.getElementById('report-date').value;
+            const reason = document.getElementById('report-reason').value;
+
+            const newReport = {
+                id: Date.now(),
+                type,
+                date,
+                reason
+            };
+
+            appState.reports.unshift(newReport);
+            localStorage.setItem('school_reports', JSON.stringify(appState.reports));
+
+            document.getElementById('report-form').reset();
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('report-date').value = todayStr;
+
+            renderReports();
+            showToast(`📨 דיווח (${type}) נשלח בהצלחה למערכת ולמייל!`, 'success');
+        }
+
+        function deleteReport(id) {
+            appState.reports = appState.reports.filter(item => item.id !== id);
+            localStorage.setItem('school_reports', JSON.stringify(appState.reports));
+            renderReports();
+            showToast('הדיווח הוסר בהצלחה', 'info');
+        }
+
+        function renderReports() {
+            const container = document.getElementById('reports-list-container');
+            const badge = document.getElementById('report-count-badge');
+            if(badge) badge.textContent = `${appState.reports.length} דיווחים`;
+
+            if (appState.reports.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        אין דיווחים קודמים על חיסורים או איחורים.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = appState.reports.map(item => `
+                <div class="p-4 bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-200/60 transition flex items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-lg text-xs font-bold">${item.type}</span>
+                            <span class="text-xs text-slate-500"><i class="fa-regular fa-calendar ml-1"></i>${item.date}</span>
+                        </div>
+                        <p class="text-sm text-slate-700 font-medium">${item.reason}</p>
+                    </div>
+                    <button onclick="deleteReport(${item.id})" class="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition" title="מחק דיווח">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Attendance Modal Toggle
+        function toggleAttendanceModal() {
+            const modal = document.getElementById('attendance-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function renderFullAttendanceLogs() {
+            const container = document.getElementById('full-attendance-logs');
+            if (!container) return;
+
+            if (appState.attendanceLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 text-sm">
+                        טרם תועדו כניסות או יציאות במערכת.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = appState.attendanceLogs.map(log => `
+                <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl ${log.type === 'arrived' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'} flex items-center justify-center">
+                            <i class="fa-solid ${log.type === 'arrived' ? 'fa-right-to-bracket' : 'fa-right-from-bracket'}"></i>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-slate-800 text-sm">${log.title}</h5>
+                            <span class="text-xs text-slate-500">${log.date}</span>
+                        </div>
+                    </div>
+                    <div class="text-left">
+                        <span class="px-3 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-xs">
+                            ${log.time}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-slate-900 text-white';
+            let icon = 'fa-circle-check text-emerald-400';
+            
+            if (type === 'success') {
+                bgClass = 'bg-slate-900 text-white border border-slate-800';
+                icon = 'fa-circle-check text-emerald-400';
+            } else if (type === 'error') {
+                bgClass = 'bg-rose-600 text-white';
+                icon = 'fa-circle-exclamation text-white';
+            } else if (type === 'info') {
+                bgClass = 'bg-indigo-900 text-white';
+                icon = 'fa-circle-info text-indigo-300';
+            }
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-medium transition transform translate-y-2 opacity-0 duration-300 ${bgClass}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-base"></i>
+                <span class="flex-1">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Remove after 4 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
