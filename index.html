@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ניהול לימודים מתקדם - אנדריי</title>
+    <!-- הוספת לוגו ללשונית הדפדפן (Favicon) -->
+    <link rel="icon" type="image/png" href="logo.png">
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Font Awesome -->
@@ -27,11 +29,119 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 md:p-6 transition-colors duration-300" id="body-bg">
 
-    <!-- מסך התחברות (סיסמה) -->
+    <!-- מסך התחברות (עם לוגו במקום מנעול) -->
     <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
         <div class="glass-light text-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20 text-center">
-            <div class="w-16 h-16 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg">
-                <i class="fa-solid fa-lock"></i>
+            <!-- החלפת המנעול בלוגו המעוצב logo.png -->
+            <div class="w-20 h-20 mx-auto mb-5 rounded-full p-1 bg-white shadow-xl flex items-center justify-center border-4 border-indigo-600/20">
+                <img src="logo.png" alt="לוגו" class="w-full h-full rounded-full object-cover">
+            </div>
+            <h2 class="text-2xl font-bold mb-2">אזור מוגן בסיסמה</h2>
+            <p class="text-sm text-slate-500 mb-6">הכנס סיסמה כדי להיכנס למערכת האישית</p>
+            <div class="space-y-4">
+                <input type="password" id="password-input" placeholder="הכנס סיסמה..."
+                    class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 text-center text-lg text-slate-800">
+                <button type="button" onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition duration-200 shadow-lg cursor-pointer">
+                    כניסה למערכת
+                </button>
+            </div>
+            <p id="login-error" class="text-red-500 text-sm mt-3 hidden">סיסמה שגויה, נסה שוב.</p>
+        </div>
+    </div>
+
+    <!-- תוכן האתר הראשי (מוסתר עד להתחברות מוצלחת) -->
+    <div id="main-content" class="w-full max-w-5xl mx-auto space-y-6 hidden">
+        
+        <!-- כותרת ראשית -->
+        <header id="header-box" class="glass-dark text-slate-100 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-4 border border-slate-800">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black text-indigo-400">מערכת ניהול לימודים מתקדמת 📚</h1>
+                <p class="text-sm text-slate-400">מסונכרן בזמן אמת לענן + תבניות מייל נפרדות</p>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+                <span id="current-time" class="bg-indigo-950/80 text-indigo-300 px-4 py-2 rounded-xl font-medium text-sm border border-indigo-900">--:--:--</span>
+                <!-- כפתור מצב כהה/בהיר -->
+                <button onclick="toggleTheme()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-2 rounded-xl text-sm font-medium transition cursor-pointer" title="החלף מצב תצוגה">
+                    <i class="fa-solid fa-circle-half-stroke text-lg"></i>
+                </button>
+                <button onclick="logout()" class="bg-rose-900/50 hover:bg-rose-900 text-rose-200 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
+                    <i class="fa-solid fa-right-from-bracket ml-1"></i> התנתק
+                </button>
+            </div>
+        </header>
+
+        <!-- אזור נוכחות (כניסה ויציאה) -->
+        <section class="card-box glass-dark p-6 rounded-2xl shadow-xl border border-slate-800">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-400">
+                <i class="fa-solid fa-business-time"></i> דיווח נוכחות לבית הספר
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button onclick="reportAttendance('הגעתי לבית הספר 🏫')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold p-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-3 cursor-pointer">
+                    <i class="fa-solid fa-door-open text-xl"></i> הגעתי לבית הספר
+                </button>
+                <button onclick="reportAttendance('יצאתי מבית הספר 🏃‍♂️')" class="bg-amber-600 hover:bg-amber-700 text-white font-bold p-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-3 cursor-pointer">
+                    <i class="fa-solid fa-person-walking-arrow-right text-xl"></i> יצאתי מבית הספר
+                </button>
+            </div>
+            <div id="attendance-status" class="mt-4 text-center text-sm font-medium text-indigo-300"></div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- מערכת שעות שבועית -->
+            <section class="card-box glass-dark p-6 rounded-2xl shadow-xl border border-slate-800">
+                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-400">
+                    <i class="fa-solid fa-calendar-days"></i> מערכת שעות שבועית
+                </h2>
+                <form onsubmit="addTimetable(event)" class="space-y-3 mb-4">
+                    <select id="tt-day" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                        <option value="ראשון">ראשון</option>עבודה מצוינת! ביצעתי את כל השינויים שביקשת במדויק.
+
+להלן רשימת העדכונים שבוצעו בקוד:
+1.  **סיסמה חדשה:** הסיסמה עודכנה ל-**2712** בתוך פונקציית ה-`handleLogin`.
+2.  **לוגו בלשונית (Favicon):** הוספתי את תגית ה-`link` בתוך ה-`<head>` המפנה לקובץ `logo.png`.
+3.  **לוגו במסך ההתחברות:** הסרתי את עיגול המנעול הסגול ובמקומו הוספתי את תמונת ה-`logo.png` שלכם, מעוצבת בעיגול לבן נקי עם הצללה ומסגרת עדינה, בדיוק באותו מיקום.
+4.  **שמירה על הקיים:** כל שאר האלמנטים, העיצוב (Tailwind), הקישור ל-Firebase, פונקציות ה-EmailJS וניהול המצבים (כהה/בהיר) נשארו בדיוק אותו הדבר.
+
+הנה קוד ה-HTML המלא והמוכן. כל מה שנותר לך לעשות הוא להעתיק אותו לקובץ ה-`index.html` שלך ב-GitHub ולוודא שקובץ הלוגו (`logo.png`) נמצא באותה תיקייה.
+
+```html
+<!DOCTYPE html>
+<html lang="he" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ניהול לימודים מתקדם - אנדריי</title>
+    <!-- הוספת לוגו ללשונית הדפדפן (Favicon) -->
+    <link rel="icon" type="image/png" href="logo.png">
+    <!-- Tailwind CSS -->
+    <script src="[https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4](https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4)"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
+    <!-- Google Fonts: Heebo -->
+    <link href="[https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap](https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap)" rel="stylesheet">
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="[https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js](https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js)"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init({
+                publicKey: "h0Yfb0K7lgXU20DXF",
+            });
+        })();
+    </script>
+    <style>
+        body { font-family: 'Heebo', sans-serif; }
+        .glass-dark { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); }
+        .glass-light { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 md:p-6 transition-colors duration-300" id="body-bg">
+
+    <!-- מסך התחברות (מעודכן עם לוגו וסיסמה חדשה) -->
+    <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+        <div class="glass-light text-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20 text-center">
+            <!-- החלפת המנעול בלוגו logo.png, מעוצב בעיגול לבן נקי -->
+            <div class="w-24 h-24 mx-auto mb-6 rounded-full p-1 bg-white shadow-xl flex items-center justify-center border-4 border-indigo-600/20">
+                <img src="logo.png" alt="לוגו אפליקציה" class="w-full h-full rounded-full object-cover">
             </div>
             <h2 class="text-2xl font-bold mb-2">אזור מוגן בסיסמה</h2>
             <p class="text-sm text-slate-500 mb-6">הכנס סיסמה כדי להיכנס למערכת האישית</p>
@@ -138,231 +248,4 @@
                         <input type="text" id="hw-subject" placeholder="מקצוע" required class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
                         <input type="date" id="hw-date" required class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
                     </div>
-                    <textarea id="hw-desc" placeholder="תיאור המשימה..." rows="2" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100"></textarea>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 rounded-xl transition cursor-pointer">הוסף שיעורי בית</button>
-                </form>
-                <div id="homework-list" class="space-y-2 max-h-48 overflow-y-auto">
-                    <p class="text-slate-500 text-center text-sm py-2">טוען שיעורי בית...</p>
-                </div>
-            </section>
-
-            <!-- רשימת מטלות ומשימות כלליות (To-Do List) -->
-            <section class="card-box glass-dark p-6 rounded-2xl shadow-xl border border-slate-800">
-                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-400">
-                    <i class="fa-solid fa-list-check"></i> רשימת משימות כלליות
-                </h2>
-                <form onsubmit="addTask(event)" class="space-y-3 mb-4">
-                    <input type="text" id="task-title" placeholder="מה צריך לעשות?" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 rounded-xl transition cursor-pointer">הוסף משימה</button>
-                </form>
-                <div id="tasks-list" class="space-y-2 max-h-48 overflow-y-auto">
-                    <p class="text-slate-500 text-center text-sm py-2">טוען משימות...</p>
-                </div>
-            </section>
-        </div>
-    </div>
-
-    <!-- פוטר -->
-    <footer class="text-center text-slate-500 text-xs mt-8">
-        נבנה באהבה עבור אנדריי • מוגן ומסונכרן לענן 🚀
-    </footer>
-
-    <!-- Firebase SDKs & Logic -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNUM7sknpTo6A0MYKvqfzrQdwhShFdGIM",
-            authDomain: "limudim-a119e.firebaseapp.com",
-            projectId: "limudim-a119e",
-            storageBucket: "limudim-a119e.firebasestorage.app",
-            messagingSenderId: "836667820",
-            appId: "1:836667820:web:5ea0bc069b7044e83b1209",
-            measurementId: "G-66PXBR586W"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // שעון חי
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('current-time').innerText = now.toLocaleTimeString('he-IL');
-        }, 1000);
-
-        // ניהול מצב כהה / בהיר
-        window.toggleTheme = function() {
-            const body = document.getElementById('body-bg');
-            const header = document.getElementById('header-box');
-            const cards = document.querySelectorAll('.card-box');
-            
-            if (body.classList.contains('bg-slate-950')) {
-                body.classList.replace('bg-slate-950', 'bg-slate-100');
-                body.classList.replace('text-slate-100', 'text-slate-800');
-                header.className = header.className.replace('glass-dark border-slate-800 text-slate-100', 'glass-light border-slate-200 text-slate-800');
-                cards.forEach(c => c.className = c.className.replace('glass-dark border-slate-800', 'glass-light border-slate-200'));
-                localStorage.setItem('theme', 'light');
-            } else {
-                body.classList.replace('bg-slate-100', 'bg-slate-950');
-                body.classList.replace('text-slate-800', 'text-slate-100');
-                header.className = header.className.replace('glass-light border-slate-200 text-slate-800', 'glass-dark border-slate-800 text-slate-100');
-                cards.forEach(c => c.className = c.className.replace('glass-light border-slate-200', 'glass-dark border-slate-800'));
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        // בדיקת סיסמה
-        window.handleLogin = function() {
-            const pass = document.getElementById('password-input').value;
-            if (pass === "1234") {
-                sessionStorage.setItem('isLoggedIn', 'true');
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('main-content').classList.remove('hidden');
-                loadAllData();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-
-        document.getElementById('password-input').addEventListener("keypress", function(event) {
-            if (event.key === "Enter") handleLogin();
-        });
-
-        window.logout = function() {
-            sessionStorage.removeItem('isLoggedIn');
-            location.reload();
-        }
-
-        if (sessionStorage.getItem('isLoggedIn') === 'true') {
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            loadAllData();
-        }
-
-        // פונקציית שליחת מייל ייעודית לפי תבנית
-        function sendEmailNotification(templateId, title, message) {
-            const now = new Date();
-            const timeStr = now.toLocaleDateString('he-IL') + ' בשעה ' + now.toLocaleTimeString('he-IL');
-            const templateParams = { title: title, message: message, time: timeStr, to_email: "limudim@yemelin.org" };
-
-            emailjs.send("service_ikpw3wm", templateId, templateParams)
-                .then(r => console.log('מייל נשלח בהצלחה!', r.status), e => console.error('שגיאה בשליחה:', e));
-        }
-
-        // טעינת נתונים כלליים
-        function loadAllData() {
-            loadCollection("homework", "homework-list", (data, id) => `
-                <div><span class="bg-indigo-900/50 text-indigo-300 text-xs font-bold px-2 py-0.5 rounded ml-2">${data.subject}</span><span class="text-sm">${data.desc}</span><div class="text-xs text-slate-400 mt-0.5">הגשה: ${data.date}</div></div>
-                <button onclick="deleteItem('homework', '${id}')" class="text-rose-400 hover:text-rose-300 text-xs p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-            `, "timestamp", "desc");
-
-            loadCollection("timetable", "timetable-list", (data, id) => `
-                <div><span class="bg-emerald-900/50 text-emerald-300 text-xs font-bold px-2 py-0.5 rounded ml-2">${data.day}</span><span class="text-sm font-semibold">${data.hour} - ${data.subject}</span></div>
-                <button onclick="deleteItem('timetable', '${id}')" class="text-rose-400 hover:text-rose-300 text-xs p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-            `);
-
-            loadCollection("grades", "grades-list", (data, id) => `
-                <div><span class="bg-amber-900/50 text-amber-300 text-xs font-bold px-2 py-0.5 rounded ml-2">${data.subject} (${data.score})</span><span class="text-sm">${data.note}</span></div>
-                <button onclick="deleteItem('grades', '${id}')" class="text-rose-400 hover:text-rose-300 text-xs p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-            `);
-
-            loadCollection("tasks", "tasks-list", (data, id) => `
-                <div class="text-sm"><i class="fa-solid fa-check text-emerald-400 ml-2"></i>${data.title}</div>
-                <button onclick="deleteItem('tasks', '${id}')" class="text-rose-400 hover:text-rose-300 text-xs p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
-            `);
-        }
-
-        function loadCollection(colName, containerId, htmlTemplate, orderField = null, orderDir = "asc") {
-            const container = document.getElementById(containerId);
-            let q = collection(db, colName);
-            if (orderField) q = query(q, orderBy(orderField, orderDir));
-
-            onSnapshot(q, (snapshot) => {
-                container.innerHTML = '';
-                if (snapshot.empty) {
-                    container.innerHTML = '<p class="text-slate-500 text-center text-sm py-2">אין נתונים כרגע.</p>';
-                    return;
-                }
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const item = document.createElement('div');
-                    item.className = "bg-slate-900/60 border border-slate-800 p-3 rounded-xl flex justify-between items-center";
-                    item.innerHTML = htmlTemplate(data, docSnap.id);
-                    container.appendChild(item);
-                });
-            });
-        }
-
-        window.deleteItem = async function(col, id) {
-            if (confirm("האם למחוק פריט זה?")) await deleteDoc(doc(db, col, id));
-        }
-
-        // הוספת שיעורי בית -> משתמש בתבנית החדשה template_e3w15yw
-        window.addHomework = async function(event) {
-            event.preventDefault();
-            const subject = document.getElementById('hw-subject').value;
-            const date = document.getElementById('hw-date').value;
-            const desc = document.getElementById('hw-desc').value;
-
-            await addDoc(collection(db, "homework"), { subject, date, desc, timestamp: new Date() });
-            
-            sendEmailNotification("template_e3w15yw", "שיעורי בית חדשים נוספו 📚", `מקצוע: ${subject}\nתאריך הגשה: ${date}\nתיאור: ${desc}`);
-            
-            document.getElementById('hw-subject').value = ''; 
-            document.getElementById('hw-date').value = ''; 
-            document.getElementById('hw-desc').value = '';
-        }
-
-        // הוספת למערכת שעות
-        window.addTimetable = async function(event) {
-            event.preventDefault();
-            await addDoc(collection(db, "timetable"), {
-                day: document.getElementById('tt-day').value,
-                hour: document.getElementById('tt-hour').value,
-                subject: document.getElementById('tt-subject').value
-            });
-            document.getElementById('tt-hour').value = ''; 
-            document.getElementById('tt-subject').value = '';
-        }
-
-        // הוספת ציון ומבחן -> משתמש בתבנית החדשה template_e3w15yw
-        window.addGrade = async function(event) {
-            event.preventDefault();
-            const subject = document.getElementById('gr-subject').value;
-            const score = document.getElementById('gr-score').value;
-            const note = document.getElementById('gr-note').value;
-
-            await addDoc(collection(db, "grades"), { subject, score, note });
-            
-            sendEmailNotification("template_e3w15yw", "ציון או מבחן חדש נוספו 🎓", `מקצוע: ${subject}\nציון/מגן: ${score}\nהערה: ${note}`);
-            
-            document.getElementById('gr-subject').value = ''; 
-            document.getElementById('gr-score').value = ''; 
-            document.getElementById('gr-note').value = '';
-        }
-
-        // הוספת משימה כללית -> משתמש בתבנית החדשה template_e3w15yw
-        window.addTask = async function(event) {
-            event.preventDefault();
-            const title = document.getElementById('task-title').value;
-
-            await addDoc(collection(db, "tasks"), { title });
-            
-            sendEmailNotification("template_e3w15yw", "משימה חדשה נוספה לרשימה ✅", `שם המשימה: ${title}`);
-            
-            document.getElementById('task-title').value = '';
-        }
-
-        // דיווח נוכחות -> משתמש בתבנית המקורית template_nci6u1p
-        window.reportAttendance = async function(type) {
-            const now = new Date();
-            await addDoc(collection(db, "attendance"), { type, date: now.toLocaleDateString('he-IL'), time: now.toLocaleTimeString('he-IL') });
-            
-            sendEmailNotification("template_nci6u1p", "דיווח נוכחות: " + type, `דווח סטטוס בשעה ${now.toLocaleTimeString('he-IL')}`);
-            
-            document.getElementById('attendance-status').innerHTML = `<span class="text-emerald-400 font-bold">✓ דווח ונשלח מייל: ${type}</span>`;
-        }
-    </script>
-</body>
-</html>
+                    <textarea id="hw-desc" placeholder="תיאור המשימה..." rows="2" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
