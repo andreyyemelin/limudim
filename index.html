@@ -135,7 +135,7 @@
             document.getElementById('current-time').innerText = now.toLocaleTimeString('he-IL');
         }, 1000);
 
-        // בדיקת סיסמה (הפחתנו תלות ב-form כדי למנוע התנגשויות תוספים)
+        // בדיקת סיסמה
         window.handleLogin = function() {
             const pass = document.getElementById('password-input').value;
             if (pass === "1234") {
@@ -148,7 +148,6 @@
             }
         }
 
-        // אפשרות ללחוץ על Enter במקלדת
         document.getElementById('password-input').addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 handleLogin();
@@ -166,7 +165,7 @@
             loadHomework();
         }
 
-        // פונקציית שליחת מייל דרך EmailJS
+        // פונקציית שליחת מייל מעודכנת שמתאימה בדיוק ל-EmailJS
         function sendEmailNotification(title, message) {
             const now = new Date();
             const timeStr = now.toLocaleDateString('he-IL') + ' בשעה ' + now.toLocaleTimeString('he-IL');
@@ -174,7 +173,8 @@
             const templateParams = {
                 title: title,
                 message: message,
-                time: timeStr
+                time: timeStr,
+                to_email: "limudim@yemelin.org"
             };
 
             emailjs.send("service_8q3jy3l", "template_nci6u1p", templateParams)
