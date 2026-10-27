@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he" dir="rtl" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניהול לימודים אישי - אנדריי</title>
+    <title>ניהול לימודים מתקדם - אנדריי</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- Font Awesome -->
@@ -21,22 +21,23 @@
     </script>
     <style>
         body { font-family: 'Heebo', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .glass-dark { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); }
+        .glass-light { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 md:p-6">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 md:p-6 transition-colors duration-300" id="body-bg">
 
     <!-- מסך התחברות (סיסמה) -->
-    <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-        <div class="glass text-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20 text-center">
-            <div class="w-16 h-16 bg-indigo-600 text-white rounded-full flex items-center justify-content mx-auto mb-4 text-2xl shadow-lg">
-                <i class="fa-solid fa-lock m-auto"></i>
+    <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4">
+        <div class="glass-light text-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/20 text-center">
+            <div class="w-16 h-16 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg">
+                <i class="fa-solid fa-lock"></i>
             </div>
             <h2 class="text-2xl font-bold mb-2">אזור מוגן בסיסמה</h2>
             <p class="text-sm text-slate-500 mb-6">הכנס סיסמה כדי להיכנס למערכת האישית</p>
             <div class="space-y-4">
                 <input type="password" id="password-input" placeholder="הכנס סיסמה..."
-                    class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 text-center text-lg">
+                    class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 text-center text-lg text-slate-800">
                 <button type="button" onclick="handleLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition duration-200 shadow-lg cursor-pointer">
                     כניסה למערכת
                 </button>
@@ -46,25 +47,29 @@
     </div>
 
     <!-- תוכן האתר הראשי (מוסתר עד להתחברות מוצלחת) -->
-    <div id="main-content" class="w-full max-w-4xl mx-auto space-y-6 hidden">
+    <div id="main-content" class="w-full max-w-5xl mx-auto space-y-6 hidden">
         
         <!-- כותרת ראשית -->
-        <header class="glass text-slate-800 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+        <header id="header-box" class="glass-dark text-slate-100 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-4 border border-slate-800">
             <div>
-                <h1 class="text-2xl md:text-3xl font-black text-indigo-900">מערכת ניהול לימודים אישית 📚</h1>
-                <p class="text-sm text-slate-500">מסונכרן בזמן אמת לענן (Firebase) + התראות מייל (Hostinger)</p>
+                <h1 class="text-2xl md:text-3xl font-black text-indigo-400">מערכת ניהול לימודים מתקדמת 📚</h1>
+                <p class="text-sm text-slate-400">מסונכרן בזמן אמת לענן + ניהול תזמון שליחת מיילים חכם</p>
             </div>
-            <div class="flex items-center gap-3">
-                <span id="current-time" class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl font-medium text-sm">--:--:--</span>
-                <button onclick="logout()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
+            <div class="flex items-center gap-3 flex-wrap">
+                <span id="current-time" class="bg-indigo-950/80 text-indigo-300 px-4 py-2 rounded-xl font-medium text-sm border border-indigo-900">--:--:--</span>
+                <!-- כפתור מצב כהה/בהיר (פיצ'ר 4) -->
+                <button onclick="toggleTheme()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-2 rounded-xl text-sm font-medium transition cursor-pointer" title="החלף מצב תצוגה">
+                    <i class="fa-solid fa-circle-half-stroke text-lg"></i>
+                </button>
+                <button onclick="logout()" class="bg-rose-900/50 hover:bg-rose-900 text-rose-200 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
                     <i class="fa-solid fa-right-from-bracket ml-1"></i> התנתק
                 </button>
             </div>
         </header>
 
         <!-- אזור נוכחות (כניסה ויציאה) -->
-        <section class="glass text-slate-800 p-6 rounded-2xl shadow-xl">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-900">
+        <section class="card-box glass-dark p-6 rounded-2xl shadow-xl border border-slate-800">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-400">
                 <i class="fa-solid fa-business-time"></i> דיווח נוכחות לבית הספר
             </h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -75,46 +80,124 @@
                     <i class="fa-solid fa-person-walking-arrow-right text-xl"></i> יצאתי מבית הספר
                 </button>
             </div>
-            <div id="attendance-status" class="mt-4 text-center text-sm font-medium text-slate-600"></div>
+            <div id="attendance-status" class="mt-4 text-center text-sm font-medium text-indigo-300"></div>
         </section>
 
-        <!-- אזור ניהול שיעורי בית -->
-        <section class="glass text-slate-800 p-6 rounded-2xl shadow-xl">
-            <h2 class="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-900">
-                <i class="fa-solid fa-book"></i> עדכון שיעורי בית ומשימות
+        <!-- פיצ'ר 5: ניהול ותזמון שליחת מיילים אוטומטית -->
+        <section class="card-box glass-dark p-6 rounded-2xl shadow-xl border border-slate-800">
+            <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-400">
+                <i class="fa-solid fa-clock-rotate-left"></i> ניהול ותזמון שליחת סיכום יומי למייל
             </h2>
-            <form onsubmit="addHomework(event)" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input type="text" id="hw-subject" placeholder="מקצוע (לדוגמה: מתמטיקה)" required
-                        class="px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600">
-                    <input type="date" id="hw-date" required
-                        class="px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600">
+            <p class="text-xs text-slate-400 mb-4">כאן תוכל לקבוע שעה מדויקת לשליחת המייל היומי, לדחות אותה או לבטל לגמרי.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">שעת שליחה מתוכננת:</label>
+                    <input type="time" id="sched-time" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
-                <textarea id="hw-desc" placeholder="תיאור המשימה / שיעורי הבית..." rows="2" required
-                    class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600"></textarea>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition shadow-md cursor-pointer">
-                    <i class="fa-solid fa-plus ml-1"></i> הוסף שיעורי בית ושלח עדכון
-                </button>
-            </form>
-
-            <div class="mt-6">
-                <h3 class="font-bold text-slate-700 mb-3">שיעורי בית פעילים:</h3>
-                <div id="homework-list" class="space-y-3 max-h-60 overflow-y-auto">
-                    <p class="text-slate-400 text-center py-2">טוען נתונים מהענן...</p>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">סטטוס תזמון:</label>
+                    <div id="sched-status-text" class="px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-xl text-sm font-medium text-emerald-400">פעיל</div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="saveSchedule()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 px-3 rounded-xl transition cursor-pointer">
+                        שמור שעה
+                    </button>
+                    <button onclick="cancelSchedule()" class="bg-rose-600/80 hover:bg-rose-700 text-white text-sm font-bold py-2 px-3 rounded-xl transition cursor-pointer" title="בטל שליחה">
+                        בטל
+                    </button>
                 </div>
             </div>
         </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- פיצ'ר 1: מערכת שעות שבועית -->
+            <section class="card-box glass-dark p-6 rounded-2xl shadow-xl border border-slate-800">
+                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-400">
+                    <i class="fa-solid fa-calendar-days"></i> מערכת שעות שבועית
+                </h2>
+                <form onsubmit="addTimetable(event)" class="space-y-3 mb-4">
+                    <select id="tt-day" class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                        <option value="ראשון">ראשון</option>
+                        <option value="שני">שני</option>
+                        <option value="שלישי">שלישי</option>
+                        <option value="רביעי">רביעי</option>
+                        <option value="חמישי">חמישי</option>
+                    </select>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="tt-hour" placeholder="שעה (למשל 08:00)" required class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                        <input type="text" id="tt-subject" placeholder="מקצוע / חדר" required class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 rounded-xl transition cursor-pointer">הוסף למערכת השעות</button>
+                </form>
+                <div id="timetable-list" class="space-y-2 max-h-48 overflow-y-auto">
+                    <p class="text-slate-500 text-center text-sm py-2">טוען מערכת שעות...</p>
+                </div>
+            </section>
+
+            <!-- פיצ'ר 2: מעקב ציונים ומבחנים -->
+            <section class="card-box glass-dark p-6 rounded-2xl shadow-xl border border-slate-800">
+                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-400">
+                    <i class="fa-solid fa-graduation-cap"></i> מעקב ציונים ומבחנים
+                </h2>
+                <form onsubmit="addGrade(event)" class="space-y-3 mb-4">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="gr-subject" placeholder="מקצוע" required class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                        <input type="number" id="gr-score" placeholder="ציון / מגן" required class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                    </div>
+                    <input type="text" id="gr-note" placeholder="הערה (למשל: מבחן מחצית)" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 rounded-xl transition cursor-pointer">שמור ציון</button>
+                </form>
+                <div id="grades-list" class="space-y-2 max-h-48 overflow-y-auto">
+                    <p class="text-slate-500 text-center text-sm py-2">טוען ציונים...</p>
+                </div>
+            </section>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- אזור ניהול שיעורי בית -->
+            <section class="card-box glass-dark p-6 rounded-2xl shadow-xl border border-slate-800">
+                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-400">
+                    <i class="fa-solid fa-book"></i> עדכון שיעורי בית
+                </h2>
+                <form onsubmit="addHomework(event)" class="space-y-3 mb-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input type="text" id="hw-subject" placeholder="מקצוע" required class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                        <input type="date" id="hw-date" required class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                    </div>
+                    <textarea id="hw-desc" placeholder="תיאור המשימה..." rows="2" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100"></textarea>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 rounded-xl transition cursor-pointer">הוסף שיעורי בית</button>
+                </form>
+                <div id="homework-list" class="space-y-2 max-h-48 overflow-y-auto">
+                    <p class="text-slate-500 text-center text-sm py-2">טוען שיעורי בית...</p>
+                </div>
+            </section>
+
+            <!-- פיצ'ר 3: רשימת מטלות ומשימות כלליות (To-Do List) -->
+            <section class="card-box glass-dark p-6 rounded-2xl shadow-xl border border-slate-800">
+                <h2 class="text-xl font-bold mb-3 flex items-center gap-2 text-indigo-400">
+                    <i class="fa-solid fa-list-check"></i> רשימת משימות כלליות
+                </h2>
+                <form onsubmit="addTask(event)" class="space-y-3 mb-4">
+                    <input type="text" id="task-title" placeholder="מה צריך לעשות?" required class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-100">
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 rounded-xl transition cursor-pointer">הוסף משימה</button>
+                </form>
+                <div id="tasks-list" class="space-y-2 max-h-48 overflow-y-auto">
+                    <p class="text-slate-500 text-center text-sm py-2">טוען משימות...</p>
+                </div>
+            </section>
+        </div>
     </div>
 
     <!-- פוטר -->
-    <footer class="text-center text-slate-400 text-xs mt-8">
+    <footer class="text-center text-slate-500 text-xs mt-8">
         נבנה באהבה עבור אנדריי • מוגן ומסונכרן לענן 🚀
     </footer>
 
     <!-- Firebase SDKs & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDNUM7sknpTo6A0MYKvqfzrQdwhShFdGIM",
@@ -135,6 +218,29 @@
             document.getElementById('current-time').innerText = now.toLocaleTimeString('he-IL');
         }, 1000);
 
+        // ניהול מצב כהה / בהיר (פיצ'ר 4)
+        window.toggleTheme = function() {
+            const body = document.getElementById('body-bg');
+            const header = document.getElementById('header-box');
+            const cards = document.querySelectorAll('.card-box');
+            
+            if (body.classList.contains('bg-slate-950')) {
+                // מעבר למצב בהיר
+                body.classList.replace('bg-slate-950', 'bg-slate-100');
+                body.classList.replace('text-slate-100', 'text-slate-800');
+                header.className = header.className.replace('glass-dark border-slate-800 text-slate-100', 'glass-light border-slate-200 text-slate-800');
+                cards.forEach(c => c.className = c.className.replace('glass-dark border-slate-800', 'glass-light border-slate-200'));
+                localStorage.setItem('theme', 'light');
+            } else {
+                // מעבר למצב כהה
+                body.classList.replace('bg-slate-100', 'bg-slate-950');
+                body.classList.replace('text-slate-800', 'text-slate-100');
+                header.className = header.className.replace('glass-light border-slate-200 text-slate-800', 'glass-dark border-slate-800 text-slate-100');
+                cards.forEach(c => c.className = c.className.replace('glass-light border-slate-200', 'glass-dark border-slate-800'));
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
         // בדיקת סיסמה
         window.handleLogin = function() {
             const pass = document.getElementById('password-input').value;
@@ -142,16 +248,14 @@
                 sessionStorage.setItem('isLoggedIn', 'true');
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
-                loadHomework();
+                loadAllData();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
         }
 
         document.getElementById('password-input').addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                handleLogin();
-            }
+            if (event.key === "Enter") handleLogin();
         });
 
         window.logout = function() {
@@ -162,118 +266,142 @@
         if (sessionStorage.getItem('isLoggedIn') === 'true') {
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
-            loadHomework();
+            loadAllData();
         }
 
-        // פונקציית שליחת מייל
+        // פונקציית שליחת מייל דרך EmailJS
         function sendEmailNotification(title, message) {
             const now = new Date();
             const timeStr = now.toLocaleDateString('he-IL') + ' בשעה ' + now.toLocaleTimeString('he-IL');
-
-            const templateParams = {
-                title: title,
-                message: message,
-                time: timeStr,
-                to_email: "limudim@yemelin.org"
-            };
+            const templateParams = { title: title, message: message, time: timeStr, to_email: "limudim@yemelin.org" };
 
             emailjs.send("service_ikpw3wm", "template_nci6u1p", templateParams)
-                .then(function(response) {
-                    console.log('המייל נשלח בהצלחה!', response.status, response.text);
-                }, function(error) {
-                    console.error('שגיאה בשליחת המייל:', error);
-                });
+                .then(r => console.log('מייל נשלח בהצלחה!', r.status), e => console.error('שגיאה בשליחה:', e));
         }
 
-        // דיווח נוכחות
-        window.reportAttendance = async function(type) {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('he-IL');
-            const dateStr = now.toLocaleDateString('he-IL');
-            
+        // ניהול תזמון מייל (פיצ'ר 5)
+        window.saveSchedule = async function() {
+            const timeVal = document.getElementById('sched-time').value;
+            if (!timeVal) return alert("אנא בחר שעה תקינה");
             try {
-                await addDoc(collection(db, "attendance"), {
-                    type: type,
-                    date: dateStr,
-                    time: timeStr,
-                    timestamp: new Date()
-                });
-                
-                sendEmailNotification("דיווח נוכחות: " + type, `דווח בהצלחה על סטטוס: ${type} בתאריך ${dateStr} בשעה ${timeStr}.`);
-
-                document.getElementById('attendance-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ דווח ונשלח מייל בהצלחה: ${type}</span>`;
-            } catch (e) {
-                console.error("שגיאה בשמירת נוכחות: ", e);
-                alert("שגיאה בשמירת הנתונים לענן.");
-            }
+                await setDoc(doc(db, "settings", "email_schedule"), { time: timeVal, status: "פעיל" });
+                document.getElementById('sched-status-text').innerText = "פעיל לשעה " + timeVal;
+                alert("השעה נשמרה בהצלחה בענן!");
+            } catch (e) { console.error(e); }
         }
 
-        // הוספת שיעורי בית
-        window.addHomework = async function(event) {
-            event.preventDefault();
-            const subject = document.getElementById('hw-subject').value;
-            const date = document.getElementById('hw-date').value;
-            const desc = document.getElementById('hw-desc').value;
-
+        window.cancelSchedule = async function() {
             try {
-                await addDoc(collection(db, "homework"), {
-                    subject,
-                    date,
-                    desc,
-                    timestamp: new Date()
-                });
-
-                sendEmailNotification("שיעורי בית חדשים: "  + subject, `נוספו שיעורי בית חדשים במקצוע ${subject}.\nתיאור: ${desc}\nלהגשה עד לתאריך: ${date}`);
-
-                document.getElementById('hw-subject').value = '';
-                document.getElementById('hw-date').value = '';
-                document.getElementById('hw-desc').value = '';
-                alert("שיעורי הבית נוספו, סונכרנו לענן ונשלח אליך מייל עדכון!");
-            } catch (e) {
-                console.error("שגיאה בהוספת שיעורי בית: ", e);
-                alert("שגיאה בשמירה לענן.");
-            }
+                await setDoc(doc(db, "settings", "email_schedule"), { time: "", status: "מבוטל" });
+                document.getElementById('sched-time').value = "";
+                document.getElementById('sched-status-text').innerText = "מבוטל";
+                alert("התזמון בוטל בהצלחה.");
+            } catch (e) { console.error(e); }
         }
 
-        // טעינת שיעורי בית בזמן אמת
-        function loadHomework() {
-            const hwListContainer = document.getElementById('homework-list');
-            const q = query(collection(db, "homework"), orderBy("timestamp", "desc"));
-            
+        // טעינת נתונים כלליים
+        function loadAllData() {
+            loadCollection("homework", "homework-list", (data, id) => `
+                <div><span class="bg-indigo-900/50 text-indigo-300 text-xs font-bold px-2 py-0.5 rounded ml-2">${data.subject}</span><span class="text-sm">${data.desc}</span><div class="text-xs text-slate-400 mt-0.5">הגשה: ${data.date}</div></div>
+                <button onclick="deleteItem('homework', '${id}')" class="text-rose-400 hover:text-rose-300 text-xs p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+            `, "timestamp", "desc");
+
+            loadCollection("timetable", "timetable-list", (data, id) => `
+                <div><span class="bg-emerald-900/50 text-emerald-300 text-xs font-bold px-2 py-0.5 rounded ml-2">${data.day}</span><span class="text-sm font-semibold">${data.hour} - ${data.subject}</span></div>
+                <button onclick="deleteItem('timetable', '${id}')" class="text-rose-400 hover:text-rose-300 text-xs p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+            `);
+
+            loadCollection("grades", "grades-list", (data, id) => `
+                <div><span class="bg-amber-900/50 text-amber-300 text-xs font-bold px-2 py-0.5 rounded ml-2">${data.subject} (${data.score})</span><span class="text-sm">${data.note}</span></div>
+                <button onclick="deleteItem('grades', '${id}')" class="text-rose-400 hover:text-rose-300 text-xs p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+            `);
+
+            loadCollection("tasks", "tasks-list", (data, id) => `
+                <div class="text-sm"><i class="fa-solid fa-check text-emerald-400 ml-2"></i>${data.title}</div>
+                <button onclick="deleteItem('tasks', '${id}')" class="text-rose-400 hover:text-rose-300 text-xs p-2 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+            `);
+
+            // טעינת תזמון קיים
+            getDoc(doc(db, "settings", "email_schedule")).then(docSnap => {
+                if (docSnap.exists()) {
+                    const d = docSnap.data();
+                    if (d.time) document.getElementById('sched-time').value = d.time;
+                    if (d.status) document.getElementById('sched-status-text').innerText = d.status + (d.time ? " (" + d.time + ")" : "");
+                }
+            });
+        }
+
+        function loadCollection(colName, containerId, htmlTemplate, orderField = null, orderDir = "asc") {
+            const container = document.getElementById(containerId);
+            let q = collection(db, colName);
+            if (orderField) q = query(q, orderBy(orderField, orderDir));
+
             onSnapshot(q, (snapshot) => {
-                hwListContainer.innerHTML = '';
+                container.innerHTML = '';
                 if (snapshot.empty) {
-                    hwListContainer.innerHTML = '<p class="text-slate-400 text-center py-2">אין שיעורי בית כרגע.</p>';
+                    container.innerHTML = '<p class="text-slate-500 text-center text-sm py-2">אין נתונים כרגע.</p>';
                     return;
                 }
                 snapshot.forEach((docSnap) => {
                     const data = docSnap.data();
                     const item = document.createElement('div');
-                    item.className = "bg-white/80 border border-slate-200 p-4 rounded-xl flex justify-between items-center shadow-sm";
-                    item.innerHTML = `
-                        <div>
-                            <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-1 rounded-md ml-2">${data.subject}</span>
-                            <span class="text-sm font-semibold text-slate-800">${data.desc}</span>
-                            <div class="text-xs text-slate-400 mt-1">להגשה לתאריך: ${data.date}</div>
-                        </div>
-                        <button onclick="deleteHomework('${docSnap.id}')" class="text-rose-500 hover:text-rose-700 text-sm p-2 cursor-pointer">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    `;
-                    hwListContainer.appendChild(item);
+                    item.className = "bg-slate-900/60 border border-slate-800 p-3 rounded-xl flex justify-between items-center";
+                    item.innerHTML = htmlTemplate(data, docSnap.id);
+                    container.appendChild(item);
                 });
             });
         }
 
-        // מחיקת שיעורי בית
-        window.deleteHomework = async function(id) {
-            if (confirm("האם למחוק את שיעורי הבית?")) {
-                try {
-                    await deleteDoc(doc(db, "homework", id));
-                } catch (e) {
-                    console.error("שגיאה במחיקה: ", e);
-                }
-            }
+        window.deleteItem = async function(col, id) {
+            if (confirm("האם למחוק פריט זה?")) await deleteDoc(doc(db, col, id));
+        }
+
+        // הוספות שונות
+        window.addHomework = async function(event) {
+            event.preventDefault();
+            await addDoc(collection(db, "homework"), {
+                subject: document.getElementById('hw-subject').value,
+                date: document.getElementById('hw-date').value,
+                desc: document.getElementById('hw-desc').value,
+                timestamp: new Date()
+            });
+            sendEmailNotification("שיעורי בית חדשים", `נוסף מקצוע: ${document.getElementById('hw-subject').value}`);
+            document.getElementById('hw-subject').value = ''; document.getElementById('hw-date').value = ''; document.getElementById('hw-desc').value = '';
+        }
+
+        window.addTimetable = async function(event) {
+            event.preventDefault();
+            await addDoc(collection(db, "timetable"), {
+                day: document.getElementById('tt-day').value,
+                hour: document.getElementById('tt-hour').value,
+                subject: document.getElementById('tt-subject').value
+            });
+            document.getElementById('tt-hour').value = ''; document.getElementById('tt-subject').value = '';
+        }
+
+        window.addGrade = async function(event) {
+            event.preventDefault();
+            await addDoc(collection(db, "grades"), {
+                subject: document.getElementById('gr-subject').value,
+                score: document.getElementById('gr-score').value,
+                note: document.getElementById('gr-note').value
+            });
+            document.getElementById('gr-subject').value = ''; document.getElementById('gr-score').value = ''; document.getElementById('gr-note').value = '';
+        }
+
+        window.addTask = async function(event) {
+            event.preventDefault();
+            await addDoc(collection(db, "tasks"), {
+                title: document.getElementById('task-title').value
+            });
+            document.getElementById('task-title').value = '';
+        }
+
+        window.reportAttendance = async function(type) {
+            const now = new Date();
+            await addDoc(collection(db, "attendance"), { type, date: now.toLocaleDateString('he-IL'), time: now.toLocaleTimeString('he-IL') });
+            sendEmailNotification("דיווח נוכחות: " + type, `דווח סטטוס בשעה ${now.toLocaleTimeString('he-IL')}`);
+            document.getElementById('attendance-status').innerHTML = `<span class="text-emerald-400 font-bold">✓ דווח ונשלח מייל: ${type}</span>`;
         }
     </script>
 </body>
