@@ -10,6 +10,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts: Heebo -->
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init({
+                publicKey: "h0Yfb0K7lgXU20DXF",
+            });
+        })();
+    </script>
     <style>
         body { font-family: 'Heebo', sans-serif; }
         .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
@@ -43,7 +52,7 @@
         <header class="glass text-slate-800 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h1 class="text-2xl md:text-3xl font-black text-indigo-900">מערכת ניהול לימודים אישית 📚</h1>
-                <p class="text-sm text-slate-500">מסונכרן בזמן אמת לענן (Firebase)</p>
+                <p class="text-sm text-slate-500">מסונכרן בזמן אמת לענן (Firebase) + התראות מייל (Hostinger)</p>
             </div>
             <div class="flex items-center gap-3">
                 <span id="current-time" class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl font-medium text-sm">--:--:--</span>
@@ -90,156 +99,4 @@
 
             <div class="mt-6">
                 <h3 class="font-bold text-slate-700 mb-3">שיעורי בית פעילים:</h3>
-                <div id="homework-list" class="space-y-3 max-h-60 overflow-y-auto">
-                    <!-- הנתונים יטענו לכאן אוטומטית מ-Firebase -->
-                    <p class="text-slate-400 text-center py-4">טוען נתונים מהענן...</p>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <!-- פוטר -->
-    <footer class="text-center text-slate-400 text-xs mt-8">
-        נבנה באהבה עבור אנדריי • מוגן ומסונכרן לענן 🚀
-    </footer>
-
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // הגדרות ה-Firebase שלך
-        const firebaseConfig = {
-            apiKey: "AIzaSyDNUM7sknpTo6A0MYKvqfzrQdwhShFdGIM",
-            authDomain: "limudim-a119e.firebaseapp.com",
-            projectId: "limudim-a119e",
-            storageBucket: "limudim-a119e.firebasestorage.app",
-            messagingSenderId: "836667820",
-            appId: "1:836667820:web:5ea0bc069b7044e83b1209",
-            measurementId: "G-66PXBR586W"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // שעון חי
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('current-time').innerText = now.toLocaleTimeString('he-IL');
-        }, 1000);
-
-        // בדיקת סיסמה (שמור ב-SessionStorage כדי לא להקליד כל פעם רענון)
-        window.handleLogin = function(event) {
-            event.preventDefault();
-            const pass = document.getElementById('password-input').value;
-            // תוכל לשנות כאן את הסיסמה למה שתרצה (כרגע מוגדרת כ- 1234)
-            if (pass === "1234") {
-                sessionStorage.setItem('isLoggedIn', 'true');
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('main-content').classList.remove('hidden');
-                loadHomework();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        }
-
-        window.logout = function() {
-            sessionStorage.removeItem('isLoggedIn');
-            location.reload();
-        }
-
-        // בדיקה אם כבר התחבר
-        if (sessionStorage.getItem('isLoggedIn') === 'true') {
-            document.getElementById('auth-screen').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-            loadHomework();
-        }
-
-        // דיווח נוכחות ושליחת אינדיקציה
-        window.reportAttendance = async function(type) {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('he-IL');
-            const dateStr = now.toLocaleDateString('he-IL');
-            
-            try {
-                // שמירה בבסיס הנתונים (Firebase)
-                await addDoc(collection(db, "attendance"), {
-                    type: type,
-                    date: dateStr,
-                    time: timeStr,
-                    timestamp: new Date()
-                });
-                document.getElementById('attendance-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ דווח בהצלחה: ${type} בתאריך ${dateStr} בשעה ${timeStr}</span>`;
-            } catch (e) {
-                console.error("שגיאה בשמירת נוכחות: ", e);
-                alert("שגיאה בשמירת הנתונים לענן.");
-            }
-        }
-
-        // הוספת שיעורי בית לענן
-        window.addHomework = async function(event) {
-            event.preventDefault();
-            const subject = document.getElementById('hw-subject').value;
-            const date = document.getElementById('hw-date').value;
-            const desc = document.getElementById('hw-desc').value;
-
-            try {
-                await addDoc(collection(db, "homework"), {
-                    subject,
-                    date,
-                    desc,
-                    timestamp: new Date()
-                });
-                document.getElementById('hw-subject').value = '';
-                document.getElementById('hw-date').value = '';
-                document.getElementById('hw-desc').value = '';
-                alert("שיעורי הבית נוספו בהצלחה וזמינים כעת מכל מכשיר!");
-            } catch (e) {
-                console.error("שגיאה בהוספת שיעורי בית: ", e);
-                alert("שגיאה בשמירה לענן.");
-            }
-        }
-
-        // טעינת שיעורי בית בזמן אמת מ-Firebase
-        function loadHomework() {
-            const hwListContainer = document.getElementById('homework-list');
-            const q = query(collection(db, "homework"), orderBy("timestamp", "desc"));
-            
-            onSnapshot(q, (snapshot) => {
-                hwListContainer.innerHTML = '';
-                if (snapshot.empty) {
-                    hwListContainer.innerHTML = '<p class="text-slate-400 text-center py-2">אין שיעורי בית כרגע.</p>';
-                    return;
-                }
-                snapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const item = document.createElement('div');
-                    item.className = "bg-white/80 border border-slate-200 p-4 rounded-xl flex justify-between items-center shadow-sm";
-                    item.innerHTML = `
-                        <div>
-                            <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-1 rounded-md ml-2">${data.subject}</span>
-                            <span class="text-sm font-semibold text-slate-800">${data.desc}</span>
-                            <div class="text-xs text-slate-400 mt-1">לשρריך לתאריך: ${data.date}</div>
-                        </div>
-                        <button onclick="deleteHomework('${docSnap.id}')" class="text-rose-500 hover:text-rose-700 text-sm p-2 cursor-pointer">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    `;
-                    hwListContainer.appendChild(item);
-                });
-            });
-        }
-
-        // מחיקת שיעורי בית
-        window.deleteHomework = async function(id) {
-            if (confirm("האם למחוק את שיעורי הבית?")) {
-                try {
-                    await deleteDoc(doc(db, "homework", id));
-                } catch (e) {
-                    console.error("שגיאה במחיקה: ", e);
-                }
-            }
-        }
-    </script>
-</body>
-</html>
+                <div id="homework-list" class="space-y-
