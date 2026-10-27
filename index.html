@@ -114,4 +114,167 @@
     <!-- Firebase SDKs & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection,
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNUM7sknpTo6A0MYKvqfzrQdwhShFdGIM",
+            authDomain: "limudim-a119e.firebaseapp.com",
+            projectId: "limudim-a119e",
+            storageBucket: "limudim-a119e.firebasestorage.app",
+            messagingSenderId: "836667820",
+            appId: "1:836667820:web:5ea0bc069b7044e83b1209",
+            measurementId: "G-66PXBR586W"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // שעון חי
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('current-time').innerText = now.toLocaleTimeString('he-IL');
+        }, 1000);
+
+        // בדיקת סיסמה
+        window.handleLogin = function() {
+            const pass = document.getElementById('password-input').value;
+            if (pass === "1234") {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                loadHomework();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('password-input').addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                handleLogin();
+            }
+        });
+
+        window.logout = function() {
+            sessionStorage.removeItem('isLoggedIn');
+            location.reload();
+        }
+
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            loadHomework();
+        }
+
+        // פונקציית שליחת מייל
+        function sendEmailNotification(title, message) {
+            const now = new Date();
+            const timeStr = now.toLocaleDateString('he-IL') + ' בשעה ' + now.toLocaleTimeString('he-IL');
+
+            const templateParams = {
+                title: title,
+                message: message,
+                time: timeStr,
+                to_email: "limudim@yemelin.org"
+            };
+
+            emailjs.send("service_ikpw3wm", "template_nci6u1p", templateParams)
+                .then(function(response) {
+                    console.log('המייל נשלח בהצלחה!', response.status, response.text);
+                }, function(error) {
+                    console.error('שגיאה בשליחת המייל:', error);
+                });
+        }
+
+        // דיווח נוכחות
+        window.reportAttendance = async function(type) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('he-IL');
+            const dateStr = now.toLocaleDateString('he-IL');
+            
+            try {
+                await addDoc(collection(db, "attendance"), {
+                    type: type,
+                    date: dateStr,
+                    time: timeStr,
+                    timestamp: new Date()
+                });
+                
+                sendEmailNotification("דיווח נוכחות: " + type, `דווח בהצלחה על סטטוס: ${type} בתאריך ${dateStr} בשעה ${timeStr}.`);
+
+                document.getElementById('attendance-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ דווח ונשלח מייל בהצלחה: ${type}</span>`;
+            } catch (e) {
+                console.error("שגיאה בשמירת נוכחות: ", e);
+                alert("שגיאה בשמירת הנתונים לענן.");
+            }
+        }
+
+        // הוספת שיעורי בית
+        window.addHomework = async function(event) {
+            event.preventDefault();
+            const subject = document.getElementById('hw-subject').value;
+            const date = document.getElementById('hw-date').value;
+            const desc = document.getElementById('hw-desc').value;
+
+            try {
+                await addDoc(collection(db, "homework"), {
+                    subject,
+                    date,
+                    desc,
+                    timestamp: new Date()
+                });
+
+                sendEmailNotification("שיעורי בית חדשים: "  + subject, `נוספו שיעורי בית חדשים במקצוע ${subject}.\nתיאור: ${desc}\nלהגשה עד לתאריך: ${date}`);
+
+                document.getElementById('hw-subject').value = '';
+                document.getElementById('hw-date').value = '';
+                document.getElementById('hw-desc').value = '';
+                alert("שיעורי הבית נוספו, סונכרנו לענן ונשלח אליך מייל עדכון!");
+            } catch (e) {
+                console.error("שגיאה בהוספת שיעורי בית: ", e);
+                alert("שגיאה בשמירה לענן.");
+            }
+        }
+
+        // טעינת שיעורי בית בזמן אמת
+        function loadHomework() {
+            const hwListContainer = document.getElementById('homework-list');
+            const q = query(collection(db, "homework"), orderBy("timestamp", "desc"));
+            
+            onSnapshot(q, (snapshot) => {
+                hwListContainer.innerHTML = '';
+                if (snapshot.empty) {
+                    hwListContainer.innerHTML = '<p class="text-slate-400 text-center py-2">אין שיעורי בית כרגע.</p>';
+                    return;
+                }
+                snapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const item = document.createElement('div');
+                    item.className = "bg-white/80 border border-slate-200 p-4 rounded-xl flex justify-between items-center shadow-sm";
+                    item.innerHTML = `
+                        <div>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-1 rounded-md ml-2">${data.subject}</span>
+                            <span class="text-sm font-semibold text-slate-800">${data.desc}</span>
+                            <div class="text-xs text-slate-400 mt-1">להגשה לתאריך: ${data.date}</div>
+                        </div>
+                        <button onclick="deleteHomework('${docSnap.id}')" class="text-rose-500 hover:text-rose-700 text-sm p-2 cursor-pointer">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    `;
+                    hwListContainer.appendChild(item);
+                });
+            });
+        }
+
+        // מחיקת שיעורי בית
+        window.deleteHomework = async function(id) {
+            if (confirm("האם למחוק את שיעורי הבית?")) {
+                try {
+                    await deleteDoc(doc(db, "homework", id));
+                } catch (e) {
+                    console.error("שגיאה במחיקה: ", e);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
