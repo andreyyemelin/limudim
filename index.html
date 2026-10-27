@@ -53,7 +53,7 @@
         <header id="header-box" class="glass-dark text-slate-100 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-center gap-4 border border-slate-800">
             <div>
                 <h1 class="text-2xl md:text-3xl font-black text-indigo-400">מערכת ניהול לימודים מתקדמת 📚</h1>
-                <p class="text-sm text-slate-400">מסונכרן בזמן אמת לענן + שליחת התראות במייל</p>
+                <p class="text-sm text-slate-400">מסונכרן בזמן אמת לענן + תבניות מייל נפרדות</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <span id="current-time" class="bg-indigo-950/80 text-indigo-300 px-4 py-2 rounded-xl font-medium text-sm border border-indigo-900">--:--:--</span>
@@ -240,13 +240,13 @@
             loadAllData();
         }
 
-        // פונקציית שליחת מייל כללית דרך EmailJS
-        function sendEmailNotification(title, message) {
+        // פונקציית שליחת מייל ייעודית לפי תבנית
+        function sendEmailNotification(templateId, title, message) {
             const now = new Date();
             const timeStr = now.toLocaleDateString('he-IL') + ' בשעה ' + now.toLocaleTimeString('he-IL');
             const templateParams = { title: title, message: message, time: timeStr, to_email: "limudim@yemelin.org" };
 
-            emailjs.send("service_ikpw3wm", "template_nci6u1p", templateParams)
+            emailjs.send("service_ikpw3wm", templateId, templateParams)
                 .then(r => console.log('מייל נשלח בהצלחה!', r.status), e => console.error('שגיאה בשליחה:', e));
         }
 
@@ -298,7 +298,7 @@
             if (confirm("האם למחוק פריט זה?")) await deleteDoc(doc(db, col, id));
         }
 
-        // הוספת שיעורי בית + שליחת מייל
+        // הוספת שיעורי בית -> משתמש בתבנית החדשה template_e3w15yw
         window.addHomework = async function(event) {
             event.preventDefault();
             const subject = document.getElementById('hw-subject').value;
@@ -307,7 +307,7 @@
 
             await addDoc(collection(db, "homework"), { subject, date, desc, timestamp: new Date() });
             
-            sendEmailNotification("שיעורי בית חדשים נוספו 📚", `מקצוע: ${subject}\nתאריך הגשה: ${date}\nתיאור: ${desc}`);
+            sendEmailNotification("template_e3w15yw", "שיעורי בית חדשים נוספו 📚", `מקצוע: ${subject}\nתאריך הגשה: ${date}\nתיאור: ${desc}`);
             
             document.getElementById('hw-subject').value = ''; 
             document.getElementById('hw-date').value = ''; 
@@ -326,7 +326,7 @@
             document.getElementById('tt-subject').value = '';
         }
 
-        // הוספת ציון ומבחן + שליחת מייל
+        // הוספת ציון ומבחן -> משתמש בתבנית החדשה template_e3w15yw
         window.addGrade = async function(event) {
             event.preventDefault();
             const subject = document.getElementById('gr-subject').value;
@@ -335,31 +335,31 @@
 
             await addDoc(collection(db, "grades"), { subject, score, note });
             
-            sendEmailNotification("ציון או מבחן חדש נוספו 🎓", `מקצוע: ${subject}\nציון/מגן: ${score}\nהערה: ${note}`);
+            sendEmailNotification("template_e3w15yw", "ציון או מבחן חדש נוספו 🎓", `מקצוע: ${subject}\nציון/מגן: ${score}\nהערה: ${note}`);
             
             document.getElementById('gr-subject').value = ''; 
             document.getElementById('gr-score').value = ''; 
             document.getElementById('gr-note').value = '';
         }
 
-        // הוספת משימה כללית + שליחת מייל
+        // הוספת משימה כללית -> משתמש בתבנית החדשה template_e3w15yw
         window.addTask = async function(event) {
             event.preventDefault();
             const title = document.getElementById('task-title').value;
 
             await addDoc(collection(db, "tasks"), { title });
             
-            sendEmailNotification("משימה חדשה נוספה לרשימה ✅", `שם המשימה: ${title}`);
+            sendEmailNotification("template_e3w15yw", "משימה חדשה נוספה לרשימה ✅", `שם המשימה: ${title}`);
             
             document.getElementById('task-title').value = '';
         }
 
-        // דיווח נוכחות + שליחת מייל
+        // דיווח נוכחות -> משתמש בתבנית המקורית template_nci6u1p
         window.reportAttendance = async function(type) {
             const now = new Date();
             await addDoc(collection(db, "attendance"), { type, date: now.toLocaleDateString('he-IL'), time: now.toLocaleTimeString('he-IL') });
             
-            sendEmailNotification("דיווח נוכחות: " + type, `דווח סטטוס בשעה ${now.toLocaleTimeString('he-IL')}`);
+            sendEmailNotification("template_nci6u1p", "דיווח נוכחות: " + type, `דווח סטטוס בשעה ${now.toLocaleTimeString('he-IL')}`);
             
             document.getElementById('attendance-status').innerHTML = `<span class="text-emerald-400 font-bold">✓ דווח ונשלח מייל: ${type}</span>`;
         }
